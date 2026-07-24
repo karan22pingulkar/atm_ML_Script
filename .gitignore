@@ -1,0 +1,20 @@
+raw/
+# Python scripts to ignore
+excel_script.py
+
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+# OS generated files
+.DS_Store
+Thumbs.db
