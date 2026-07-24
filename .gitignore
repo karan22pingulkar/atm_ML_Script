@@ -1,4 +1,4 @@
-raw/
+
 # Python scripts to ignore
 data/convert_to_excel.py
 data/excel_script.py
