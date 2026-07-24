@@ -8,16 +8,24 @@ import polars as pl
 # PATHS
 # ==========================================
 
-RAW_DIR = "raw"
+# Dynamically find project root relative to this script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Adjust if script lives in src/ or root
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
-PROCESSED_DIR = "processed"
+# Pointing into the private submodule repo located at data/raw
+DATA_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
 
+RAW_DIR = DATA_DIR
+PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+
+# Ensure target output directory exists
 os.makedirs(PROCESSED_DIR, exist_ok=True)
-
 
 # ==========================================
 # VALIDATION
 # ==========================================
+
 
 def validate_columns(df, required_columns, file_name):
 
@@ -33,7 +41,6 @@ def validate_columns(df, required_columns, file_name):
 # ==========================================
 # EXCEL TO PARQUET CONVERSION
 # ==========================================
-
 
 
 def convert_excel_to_parquet():
@@ -80,7 +87,6 @@ def convert_excel_to_parquet():
         f"  Loaded {len(sheet_data)} sheets "
         f"with {df_tx.height} total rows"
     )
-
 
     validate_columns(
         df_tx,
