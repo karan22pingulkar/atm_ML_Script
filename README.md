@@ -15,8 +15,6 @@ The solution enables banking operations and cash logistics teams to optimize ATM
 > 🚧 **Work in Progress**
 > - `train_and_predict.py`
 > - `train_and_predictV2.py`
-> - `convert_to_excel.py`
-> - `excel_script.py`
 > - Additional improvements for feature engineering and prediction accuracy are being developed and will be updated in future releases.
 
 ---
@@ -54,8 +52,6 @@ ATM_PREDICTION/
 │   │
 │   ├── train_and_predict.py         # 🚧 Under development
 │   ├── train_and_predictV2.py       # 🚧 Under development
-│   ├── convert_to_excel.py          # 🚧 Under development
-│   ├── excel_script.py              # 🚧 Under development
 │   ├── holiday.py
 │   └── requirements.txt
 │
@@ -111,7 +107,7 @@ cd ATM_PREDICTION
 pip install -r atm_ML_Script/requirements.txt
 ```
 
-### Sample requirements.txt
+### Sample `requirements.txt`
 
 ```text
 pandas>=2.0.0
