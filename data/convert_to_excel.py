@@ -4,7 +4,7 @@ import pandas as pd
 parquet_file = '../data/processed/transactions.parquet'
 excel_file = '../data/raw/transactions.xlsx'
 
-# 2. Read the Parquet file into a Pandas DataFrame
+# 2. Read the Parquet file into a Pandas DataFramee
 df = pd.read_parquet(parquet_file)
 
 # 3. Export the DataFrame to an Excel file (without the index column)
