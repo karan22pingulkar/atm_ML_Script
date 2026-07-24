@@ -1,7 +1,7 @@
 raw/
 # Python scripts to ignore
-excel_script.py
-convert_to_excel.py
+data/convert_to_excel.py
+data/excel_script.py
 
 __pycache__/
 *.py[cod]
