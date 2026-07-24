@@ -4,52 +4,63 @@ An end-to-end Machine Learning pipeline built using **Python**, **LightGBM**, an
 
 The solution enables banking operations and cash logistics teams to optimize ATM replenishment planning, reduce idle cash holdings, and minimize cash-out events by learning historical withdrawal behavior along with salary cycles, weekends, and regional holiday effects.
 
+> **Project Status**
+>
+> This project is currently under active development.
+>
+> ✅ **Working Scripts**
+> - `convert_to_parquet.py`
+> - `v1 script.py`
+>
+> 🚧 **Work in Progress**
+> - `train_and_predict.py`
+> - `train_and_predictV2.py`
+> - `convert_to_excel.py`
+> - `excel_script.py`
+> - Additional improvements for feature engineering and prediction accuracy are being developed and will be updated in future releases.
+
 ---
 
 # 📌 Features
 
-- 🚀 **High-Performance Data Pipeline**
-  - Converts raw multi-sheet Excel files into compressed Parquet datasets for significantly faster processing.
-
-- 📈 **Advanced Feature Engineering**
+- 🚀 High-performance data preprocessing using Apache Parquet
+- 📈 Advanced feature engineering
   - Salary period indicators
   - Weekend & long-weekend detection
-  - Holiday classification
-  - Festival impact modeling
-  - ATM-wise lag features
-  - Rolling average features
-
-- 🤖 **Machine Learning Forecasting**
-  - LightGBM regression models
-  - Independent models for:
-    - Day +1 Forecast
-    - Day +3 Forecast
-    - Day +7 Forecast
-
-- 📊 **Production Ready Reports**
-  - Generates formatted Excel reports
-  - Separate worksheets for each forecast horizon
-  - Supports very large datasets
+  - Holiday impact modeling
+  - Festival identification
+  - Rolling statistics
+  - Historical lag features
+- 🤖 LightGBM-based forecasting
+- 📊 Automated Excel prediction reports
+- ⚡ Optimized for large transaction datasets
 
 ---
 
 # 📁 Repository Structure
 
 ```text
-.
-├── data/
-│   └── raw_atm_data.xlsx                 # Raw transaction workbook
+ATM_PREDICTION/
 │
-├── processed/
-│   ├── transactions.parquet              # Historical ATM transactions
-│   └── holiday_master.parquet            # State-wise holiday calendar
+├── atm_ML_Script/
+│   │
+│   ├── data/
+│   │   ├── raw/                     # Place raw Excel transaction files here
+│   │   ├── processed/               # Generated Parquet datasets
+│   │   └── outputs/                 # Prediction reports
+│   │
+│   ├── convert_to_parquet.py        # ✅ Converts Excel to Parquet
+│   ├── v1 script.py                 # ✅ Main forecasting pipeline
+│   │
+│   ├── train_and_predict.py         # 🚧 Under development
+│   ├── train_and_predictV2.py       # 🚧 Under development
+│   ├── convert_to_excel.py          # 🚧 Under development
+│   ├── excel_script.py              # 🚧 Under development
+│   ├── holiday.py
+│   └── requirements.txt
 │
-├── outputs/
-│   └── atm_predictions_output.xlsx       # Prediction report
-│
-├── preprocess.py                         # Excel → Parquet converter
-├── forecast_engine.py                    # Model training & forecasting
-├── requirements.txt                      # Python dependencies
+├── venv/
+├── .gitignore
 └── README.md
 ```
 
@@ -59,20 +70,20 @@ The solution enables banking operations and cash logistics teams to optimize ATM
 
 ## 1. Daily Transactions (`processed/transactions.parquet`)
 
-Your historical transaction dataset must contain the following schema.
+The transaction dataset should contain the following schema.
 
 | Column Name | Data Type | Example | Description |
 |------------|-----------|----------|-------------|
 | `atm_id` | String | ATM_1042 | Unique ATM identifier |
 | `date` | Date / String | 2026-03-15 | Transaction date (YYYY-MM-DD) |
 | `dispense` | Float / Integer | 1450000 | Total cash dispensed (Target Variable) |
-| `state` | String | MAHARASHTRA | ATM state used for regional holiday mapping |
+| `state` | String | MAHARASHTRA | ATM state for regional holiday mapping |
 
 ---
 
 ## 2. Holiday Master (`processed/holiday_master.parquet`)
 
-This dataset contains state-level holiday information.
+The holiday master dataset should contain:
 
 | Column Name | Data Type | Example | Description |
 |------------|-----------|----------|-------------|
@@ -89,7 +100,7 @@ This dataset contains state-level holiday information.
 ```bash
 git clone https://github.com/your-username/atm-dispense-forecasting.git
 
-cd atm-dispense-forecasting
+cd ATM_PREDICTION
 ```
 
 ---
@@ -97,10 +108,10 @@ cd atm-dispense-forecasting
 ## 2. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r atm_ML_Script/requirements.txt
 ```
 
-### Sample `requirements.txt`
+### Sample requirements.txt
 
 ```text
 pandas>=2.0.0
@@ -108,54 +119,79 @@ numpy
 lightgbm>=4.0.0
 pyarrow
 xlsxwriter
+openpyxl
 ```
 
 ---
 
-## 3. Data Preprocessing
+# 📂 Preparing Input Data
 
-Convert raw Excel transaction logs into optimized Parquet datasets.
+Place your raw transaction Excel files inside:
+
+```text
+atm_ML_Script/
+    data/
+        raw/
+```
+
+The preprocessing script will automatically read the Excel files from this folder and generate optimized Parquet datasets.
+
+---
+
+# ⚡ Step 1: Convert Excel to Parquet
+
+Run the preprocessing script.
 
 ```bash
-python preprocess.py
+python convert_to_parquet.py
 ```
 
-This step creates:
+This converts Excel workbooks into compressed Parquet files for significantly faster loading and lower memory usage.
 
-```
-processed/
-    transactions.parquet
-    holiday_master.parquet
+Generated files:
+
+```text
+data/
+    processed/
+        transactions.parquet
+        holiday_master.parquet
 ```
 
 ---
 
-## 4. Train Models & Generate Forecasts
+# 🤖 Step 2: Run the Forecasting Pipeline
 
-Run the forecasting engine.
+After preprocessing completes successfully, execute the main forecasting pipeline.
 
 ```bash
-python forecast_engine.py
+python "v1 script.py"
 ```
 
-The pipeline automatically:
+The script automatically:
 
-- Loads historical transactions
+- Loads transaction history
 - Loads holiday master
 - Performs feature engineering
-- Trains LightGBM models
-- Generates forecasts for Day +1, Day +3, and Day +7
-- Exports formatted Excel reports
+- Creates lag and rolling features
+- Trains the forecasting model
+- Predicts ATM cash dispense
+- Generates Excel prediction reports
 
 ---
 
 # 📊 Output Excel Format
 
-The prediction report is generated at:
+Prediction reports are generated inside:
 
+```text
+data/
+    outputs/
 ```
-outputs/
-    atm_predictions_output.xlsx
+
+Example:
+
+```text
+atm_predictions_output.xlsx
 ```
 
 The workbook contains separate worksheets for each prediction horizon.
@@ -179,13 +215,9 @@ The workbook contains separate worksheets for each prediction horizon.
 
 # 💡 Customizing Configuration
 
-Model parameters can be modified inside:
+Model parameters can be modified inside the forecasting script (`v1 script.py`) or future versions (`train_and_predict.py` and `train_and_predictV2.py`) as development progresses.
 
-```
-forecast_engine.py
-```
-
-Typical LightGBM parameters include:
+Typical LightGBM configuration:
 
 ```python
 LGBMRegressor(
@@ -201,41 +233,48 @@ LGBMRegressor(
 You can customize:
 
 - Learning rate
-- Number of trees
-- Maximum tree depth
+- Number of estimators
+- Tree depth
 - Number of leaves
 - Early stopping
-- Feature selection
+- Feature engineering
 - Validation strategy
 - Forecast horizons
 
 ---
 
-# 🔄 Forecast Workflow
+# 🔄 Project Workflow
 
 ```text
-Raw Excel Files
-        │
-        ▼
-preprocess.py
-        │
-        ▼
-transactions.parquet
-holiday_master.parquet
-        │
-        ▼
-Feature Engineering
-        │
-        ▼
-LightGBM Training
-        │
-        ▼
-Day +1 Model
-Day +3 Model
-Day +7 Model
-        │
-        ▼
-Excel Forecast Report
+                 Raw ATM Excel Files
+                         │
+                         ▼
+              data/raw/
+                         │
+                         ▼
+          convert_to_parquet.py
+                         │
+                         ▼
+      Optimized Parquet Datasets
+      (transactions.parquet &
+       holiday_master.parquet)
+                         │
+                         ▼
+                v1 script.py
+                         │
+        Feature Engineering
+                         │
+                         ▼
+           LightGBM Model Training
+                         │
+                         ▼
+      Day +1 / Day +3 / Day +7 Forecasts
+                         │
+                         ▼
+      Formatted Excel Prediction Report
+                         │
+                         ▼
+              data/outputs/
 ```
 
 ---
@@ -247,38 +286,56 @@ Excel Forecast Report
 - NumPy
 - LightGBM
 - PyArrow
+- OpenPyXL
 - XlsxWriter
 
 ---
 
 # 📈 Forecast Features
 
-The model incorporates several predictive signals, including:
+The forecasting model incorporates multiple predictive signals, including:
 
-- Historical cash dispense trends
-- ATM-level lag features
-- Rolling averages
+- Historical ATM dispense patterns
+- ATM-specific lag features
+- Rolling mean statistics
 - Weekend indicators
 - Long weekend detection
 - Salary period effects
 - National holidays
 - State holidays
-- Festival periods
+- Festival impacts
 - Calendar-based temporal features
+
+---
+
+# 🚧 Development Roadmap
+
+Current version focuses on establishing the complete preprocessing and forecasting pipeline.
+
+Upcoming improvements include:
+
+- Improved feature engineering
+- Hyperparameter optimization
+- Enhanced prediction accuracy
+- Automated model evaluation
+- Better Excel reporting
+- Modular training pipeline
+- Version 2 forecasting engine
+- Performance optimizations
 
 ---
 
 # 🎯 Use Cases
 
-- ATM cash replenishment optimization
-- Cash logistics planning
-- Currency inventory management
-- Regional demand forecasting
+- ATM cash replenishment planning
+- Cash logistics optimization
 - Banking operations analytics
 - Treasury planning
+- Currency inventory management
+- Regional cash demand forecasting
 
 ---
 
 # 📄 License
 
-This project is intended for educational, research, and enterprise banking analytics applications. Modify and extend it according to your organization's forecasting requirements.
+This project is intended for educational, research, and enterprise banking analytics applications. Feel free to modify and extend it according to your organization's forecasting requirements.
