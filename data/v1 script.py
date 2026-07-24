@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -21,10 +22,15 @@ import lightgbm as lgb
 
 # TARGET_YEARS = [2025, 2026]  # Years covering your historical + forecast windows
 
-OUTPUT_EXCEL = "outputs/atm_predictions_output.xlsx"
+BASE_DIR = Path(__file__).resolve().parent
 
+RAW_DIR = BASE_DIR / "raw"
+PROCESSED_DIR = RAW_DIR / "processed"
+OUTPUT_DIR = RAW_DIR / "outputs"
 
-os.makedirs("outputs", exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+OUTPUT_EXCEL = OUTPUT_DIR / "atm_predictions_output.xlsx"
 
 
 # ==========================================
@@ -32,7 +38,6 @@ os.makedirs("outputs", exist_ok=True)
 # 1. FAST PARQUET LOADING & FEATURE ENGINEERING
 
 # ==========================================
-
 
 
 def classify_holiday(event):
@@ -90,11 +95,19 @@ def classify_holiday(event):
 def load_and_engineer_data():
 
     print(">>> Loading fast Parquet data...")
+    print("Base directory :", BASE_DIR)
+    print("Processed path :", PROCESSED_DIR)
+    print("Transactions exists :", os.path.exists(
+        os.path.join(PROCESSED_DIR, "transactions.parquet")))
+    print("Holiday exists :", os.path.exists(
+        os.path.join(PROCESSED_DIR, "holiday_master.parquet")))
+    print(PROCESSED_DIR)
+    print((PROCESSED_DIR / "transactions.parquet").exists())
+    print((PROCESSED_DIR / "holiday_master.parquet").exists())
 
-    df_tx = pd.read_parquet("processed/transactions.parquet")
-    holiday_df = pd.read_parquet(
-    "processed/holiday_master.parquet"
-)
+    df_tx = pd.read_parquet(PROCESSED_DIR / "transactions.parquet")
+
+    holiday_df = pd.read_parquet(PROCESSED_DIR / "holiday_master.parquet")
 
     # df_meta = pd.read_parquet("data/processed/atm_metadata.parquet")
 
@@ -102,10 +115,6 @@ def load_and_engineer_data():
 
     # df = pd.merge(df_tx, df_meta, on="atm_id", how="left")
     df = df_tx.copy()
-    
-
-    
-
 
     #  Data type cleanup
     df["dispense"] = pd.to_numeric(df["dispense"], errors="coerce")
@@ -123,14 +132,14 @@ def load_and_engineer_data():
     #     errors="coerce"
     # )
 
-    df["date"] = pd.to_datetime(df["date"],errors="coerce")
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
     df["state"] = (
-    df["state"]
-    .astype(str)
-    .str.strip()
-    .str.upper()
-)
+        df["state"]
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
 
     df = df.sort_values(by=["atm_id", "date"]).reset_index(drop=True)
     # Remove ATMs with 100% zero dispense history
@@ -181,11 +190,11 @@ def load_and_engineer_data():
     )
 
     holiday_df["state"] = (
-    holiday_df["state"]
-    .astype(str)
-    .str.strip()
-    .str.upper()
-)
+        holiday_df["state"]
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
 
     holiday_df["holiday_type"] = (
         holiday_df["holiday_name"]
@@ -196,13 +205,13 @@ def load_and_engineer_data():
 
     holiday_df["is_major_festival"] = (
         holiday_df["holiday_name"]
-            .astype(str)
-            .str.lower()
+        .astype(str)
+        .str.lower()
             .str.contains(
                 "holi|diwali|eid|durga|dussehra|christmas|onam",
                 na=False
-            )
-            .astype(int)
+        )
+        .astype(int)
     )
 
     holiday_df = holiday_df[
@@ -219,7 +228,7 @@ def load_and_engineer_data():
     df = pd.merge(
         df,
         holiday_df,
-        on=["date","state"],
+        on=["date", "state"],
         how="left"
     )
 
@@ -273,7 +282,8 @@ def load_and_engineer_data():
         "count"
     )
 
-    df["is_long_weekend"] = ((is_off_day) & (df["off_block_length"] >= 3)).astype(int)
+    df["is_long_weekend"] = ((is_off_day) & (
+        df["off_block_length"] >= 3)).astype(int)
 
     df.drop(columns=["off_block_length"], inplace=True)
 
@@ -312,7 +322,7 @@ def load_and_engineer_data():
     )
 
     df["dispense_roll_mean_14"] = grouped.transform(
-        lambda x: x.shift(1).rolling(14,min_periods=11).mean()
+        lambda x: x.shift(1).rolling(14, min_periods=11).mean()
     )
 
     # Fill missing categorical values
@@ -321,8 +331,7 @@ def load_and_engineer_data():
 
     # Categorical Conversions
 
-
-    for col in ["atm_id", "state","holiday_name","holiday_type"]:
+    for col in ["atm_id", "state", "holiday_name", "holiday_type"]:
 
         if col in df.columns:
 
@@ -344,41 +353,41 @@ def load_and_engineer_data():
 def train_and_forecast(df):
 
     feature_cols = [
-    "atm_id",
-    "state",
-    # "location_type",
-    # "city_tier",
-    # "uptime_pct",
-    # "downtime_pct",
-    "day_of_week",
-    "day_of_month",
-    "month",
-    "is_friday",
-    "is_weekend",
-    "is_salary_period",
+        "atm_id",
+        "state",
+        # "location_type",
+        # "city_tier",
+        # "uptime_pct",
+        # "downtime_pct",
+        "day_of_week",
+        "day_of_month",
+        "month",
+        "is_friday",
+        "is_weekend",
+        "is_salary_period",
 
-    # Holiday Features
-    "is_holiday",
-    "holiday_name",
-    "holiday_type",
-    "is_major_festival",
+        # Holiday Features
+        "is_holiday",
+        "holiday_name",
+        "holiday_type",
+        "is_major_festival",
 
-    "is_pre_holiday",
-    "is_long_weekend",
+        "is_pre_holiday",
+        "is_long_weekend",
 
-    # Compound Features
-    "is_salary_friday",
-    "is_salary_weekend",
-    "is_salary_weekend_holiday",
-    "is_salary_long_weekend",
+        # Compound Features
+        "is_salary_friday",
+        "is_salary_weekend",
+        "is_salary_weekend_holiday",
+        "is_salary_long_weekend",
 
-    # Historical Features
-    "dispense_lag_1",
-    "dispense_lag_2",
-    "dispense_lag_7",
-    "dispense_roll_mean_7",
-    "dispense_roll_mean_14",
-]
+        # Historical Features
+        "dispense_lag_1",
+        "dispense_lag_2",
+        "dispense_lag_7",
+        "dispense_roll_mean_7",
+        "dispense_roll_mean_14",
+    ]
 
     # Target Shifts for multi-horizon model
 
@@ -388,12 +397,12 @@ def train_and_forecast(df):
 
     df["target_7day"] = df.groupby("atm_id")["dispense"].shift(-7)
 
-    cleaned_df = df.dropna(subset=["dispense_lag_7", "dispense_roll_mean_14"]).copy()
+    cleaned_df = df.dropna(
+        subset=["dispense_lag_7", "dispense_roll_mean_14"]).copy()
     if cleaned_df.empty:
         raise ValueError(
             "No data available after feature engineering. ")
-            # "Ensure each ATM has at least 12 days of history.")
-
+        # "Ensure each ATM has at least 12 days of history.")
 
     # Train/Validation Time Split (Last 30 days validation)
 
@@ -435,14 +444,14 @@ def train_and_forecast(df):
         tr_sub = train_df.dropna(subset=[target])
 
         vl_sub = val_df.dropna(subset=[target])
-        if len(tr_sub)==0:
+        if len(tr_sub) == 0:
             print(f"Skipping{target}:no training rows")
             continue
         print(
             f"{target}:",
-              "tr_sub=", len(tr_sub),
-              "vl_sub=", len(vl_sub)
-              )
+            "tr_sub=", len(tr_sub),
+            "vl_sub=", len(vl_sub)
+        )
         print("Training:", target)
         print("tr_sub shape:", tr_sub[feature_cols].shape)
 
@@ -453,13 +462,11 @@ def train_and_forecast(df):
         print(tr_sub[feature_cols].columns.tolist())
 
         if tr_sub[feature_cols].shape[0] == 0:
-                print(f"{target}: empty training feature set")
-                continue
+            print(f"{target}: empty training feature set")
+            continue
         if len(vl_sub) > 0 and vl_sub[feature_cols].shape[0] == 0:
-                    print(f"{target}: empty validation feature set") 
-                    vl_sub = pd.DataFrame()
-
-
+            print(f"{target}: empty validation feature set")
+            vl_sub = pd.DataFrame()
 
         model = lgb.LGBMRegressor(
             n_estimators=400,
@@ -471,11 +478,11 @@ def train_and_forecast(df):
 
         if len(vl_sub) > 100:
             model.fit(
-            tr_sub[feature_cols],
-            tr_sub[target],
-            eval_set=[(vl_sub[feature_cols], vl_sub[target])],
-            callbacks=[lgb.early_stopping(30, verbose=False)],
-        )
+                tr_sub[feature_cols],
+                tr_sub[target],
+                eval_set=[(vl_sub[feature_cols], vl_sub[target])],
+                callbacks=[lgb.early_stopping(30, verbose=False)],
+            )
         else:
             print(f"{target}: no validation rows, training without eval_set")
 
@@ -491,7 +498,7 @@ def train_and_forecast(df):
         latest_records[f"predicted_dispense_{label}"] = (latest_records[
             f"predicted_dispense_{label}"
         ].clip(lower=0)
-        .round(0)
+            .round(0)
         )
 
         predictions_dict[label] = latest_records
@@ -627,15 +634,11 @@ def export_to_excel(predictions_dict, output_path):
 
     print(">>> Export Complete Successfully!")
 
-    
-
 
 # ==========================================
 
 # MAIN EXECUTION
-
 # ==========================================
-
 if __name__ == "__main__":
 
     df = load_and_engineer_data()
