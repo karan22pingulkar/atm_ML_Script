@@ -114,7 +114,7 @@ def load_and_engineer_data():
     # Merge Transaction + Metadata
 
     # df = pd.merge(df_tx, df_meta, on="atm_id", how="left")
-    df = df_tx.copy()
+    # df = df_tx.copy()
 
     #  Data type cleanup
     df["dispense"] = pd.to_numeric(df["dispense"], errors="coerce")
